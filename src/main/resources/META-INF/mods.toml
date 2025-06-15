@@ -1,0 +1,31 @@
+modLoader="javafml"
+loaderVersion="[47,)"
+license="MIT"
+issueTrackerURL="https://github.com/PinkGoosik/better-end-sky/issues"
+
+[[mods]]
+modId="better_end_sky"
+version="${version}"
+displayName="Better End Sky"
+updateJSONURL=""
+displayURL="https://github.com/PinkGoosik/better-end-sky"
+logoFile="assets/better_end_sky/icon.png"
+credits="BetterX Team, paulevs"
+authors="paulevs, BetterX Team"
+description='''
+Ripoff of the Better End mod's sky renderer in a standalone mod for a client-side only usage.
+'''
+
+[[dependencies.better_end_sky]]
+modId="forge"
+mandatory=true
+versionRange="[47,)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.better_end_sky]]
+modId="minecraft"
+mandatory=true
+versionRange="[${mcversion}]"
+ordering="NONE"
+side="BOTH"

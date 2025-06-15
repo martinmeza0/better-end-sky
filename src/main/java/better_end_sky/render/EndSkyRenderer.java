@@ -1,35 +1,38 @@
 package better_end_sky.render;
 
-import better_end_sky.Mod;
+import better_end_sky.BetterEndSkyMod;
 import better_end_sky.util.BackgroundInfo;
 import better_end_sky.util.MHelper;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
-import net.minecraft.client.renderer.FogRenderer;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.levelgen.LegacyRandomSource;
 
-import net.fabricmc.fabric.api.client.rendering.v1.DimensionRenderingRegistry;
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.client.event.RenderLevelStageEvent;
+import net.minecraft.client.Minecraft;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
-public class EndSkyRenderer implements DimensionRenderingRegistry.SkyRenderer {
+@OnlyIn(Dist.CLIENT)
+public class EndSkyRenderer {
     @FunctionalInterface
     interface BufferFunction {
         void make(BufferBuilder bufferBuilder, double minSize, double maxSize, int count, long seed);
     }
 
-    private static final ResourceLocation NEBULA_1 = Mod.id("textures/sky/nebula_2.png");
-    private static final ResourceLocation NEBULA_2 = Mod.id("textures/sky/nebula_3.png");
-    private static final ResourceLocation HORIZON = Mod.id("textures/sky/nebula_1.png");
-    private static final ResourceLocation STARS = Mod.id("textures/sky/stars.png");
-    private static final ResourceLocation FOG = Mod.id("textures/sky/fog.png");
+    private static final ResourceLocation NEBULA_1 = BetterEndSkyMod.id("textures/sky/nebula_2.png");
+    private static final ResourceLocation NEBULA_2 = BetterEndSkyMod.id("textures/sky/nebula_3.png");
+    private static final ResourceLocation HORIZON = BetterEndSkyMod.id("textures/sky/nebula_1.png");
+    private static final ResourceLocation STARS = BetterEndSkyMod.id("textures/sky/stars.png");
+    private static final ResourceLocation FOG = BetterEndSkyMod.id("textures/sky/fog.png");
 
     private VertexBuffer nebula1;
     private VertexBuffer nebula2;
@@ -62,22 +65,26 @@ public class EndSkyRenderer implements DimensionRenderingRegistry.SkyRenderer {
         }
     }
 
-    @Override
-    public void render(WorldRenderContext context) {
-        if (context.world() == null || context.matrixStack() == null) {
+    @SubscribeEvent
+    public void onRenderLevelStage(RenderLevelStageEvent event) {
+        if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_SKY) {
+            return;
+        }
+        
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.level == null || mc.level.dimension() != net.minecraft.world.level.Level.END) {
             return;
         }
 
         initialise();
 
-        Matrix4f projectionMatrix = context.projectionMatrix();
-        PoseStack matrices = context.matrixStack();
+        Matrix4f projectionMatrix = event.getProjectionMatrix();
+        PoseStack matrices = event.getPoseStack();
 
-        float time = ((context.world().getDayTime() + context.tickDelta()) % 360000) * 0.000017453292F;
+        float time = ((mc.level.getDayTime() + event.getPartialTick()) % 360000) * 0.000017453292F;
         float time2 = time * 2;
         float time3 = time * 3;
 
-        FogRenderer.levelFogColor();
         RenderSystem.depthMask(false);
         RenderSystem.enableBlend();
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);

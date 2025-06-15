@@ -1,36 +1,97 @@
-plugins {
-	id "fabric-loom" version "1.0-SNAPSHOT"
-	id "io.github.juuxel.loom-quiltflower" version "1.8.0"
-	id "io.github.p03w.machete" version "1.2.0"
+// Apply ForgeGradle using the older method
+buildscript {
+    repositories {
+        maven { url = 'https://maven.minecraftforge.net' }
+        mavenCentral()
+        gradlePluginPortal()
+    }
+    dependencies {
+        classpath 'net.minecraftforge.gradle:ForgeGradle:5.1.+'
+    }
 }
 
-archivesBaseName = project.archives_base_name
-version = project.mod_version
-group = project.maven_group
+apply plugin: 'net.minecraftforge.gradle'
 
-repositories {}
+// ---- PROJECT PROPERTIES ----
+def minecraft_version = '1.20.1'
+def forge_version = '47.1.44'
+def mod_version = '1.0.0'
+def maven_group = 'com.example'
+def archives_base_name = 'better_end_sky'
 
-dependencies {
-    minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    mappings loom.layered {it.officialMojangMappings()}
-    modImplementation "net.fabricmc:fabric-loader:${project.fabric_loader}"
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api}"
-}
+// ---- METADATA ----
+version = mod_version
+group = maven_group
+archivesBaseName = archives_base_name
 
-processResources {
-    inputs.property "version", project.version
-    filesMatching("fabric.mod.json") {
-        expand "version": project.version
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
     }
 }
 
 tasks.withType(JavaCompile).configureEach {
-    it.options.encoding = "UTF-8"
-    it.options.release = 17
+    options.release.set(17)
 }
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
-    withSourcesJar()
+minecraft {
+    mappings channel: 'official', version: minecraft_version
+
+    runs {
+        client {
+            workingDirectory project.file('run')
+            property 'forge.logging.markers', 'REGISTRIES'
+            property 'forge.logging.console.level', 'debug'
+            mods {
+                better_end_sky {
+                    source sourceSets.main
+                }
+            }
+        }
+
+        server {
+            workingDirectory project.file('run')
+            property 'forge.logging.markers', 'REGISTRIES'
+            property 'forge.logging.console.level', 'debug'
+            mods {
+                better_end_sky {
+                    source sourceSets.main
+                }
+            }
+        }
+
+        data {
+            workingDirectory project.file('run')
+            property 'forge.logging.markers', 'REGISTRIES'
+            property 'forge.logging.console.level', 'debug'
+            args '--mod', 'better_end_sky', '--all', '--output', file('src/generated/resources/')
+            mods {
+                better_end_sky {
+                    source sourceSets.main
+                }
+            }
+        }
+    }
+}
+
+repositories {
+    mavenCentral()
+    maven { url = 'https://maven.minecraftforge.net' }
+}
+
+dependencies {
+    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+}
+
+sourceSets.main.resources {
+    srcDir 'src/generated/resources'
+}
+
+processResources {
+    inputs.property "version", project.version
+    inputs.property "mcversion", minecraft_version
+
+    filesMatching("META-INF/mods.toml") {
+        expand "version": project.version, "mcversion": minecraft_version
+    }
 }
